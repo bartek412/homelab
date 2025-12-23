@@ -1,0 +1,81 @@
+# ----------------------------------------------------------------------
+# Terraform
+# ----------------------------------------------------------------------
+# Local .terraform directories (plugins, modules)
+**/.terraform/
+
+# .tfstate files (contain sensitive data/IPs - NEVER COMMIT THESE)
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# .tfvars files (contain your actual secrets/passwords)
+*.tfvars
+*.auto.tfvars
+
+# Exception: allow example files to be committed
+!terraform.tfvars.example
+!example.tfvars
+
+# Terraform crash logs
+crash.log
+crash.log.*
+
+# Terraform override files
+override.tf
+override.tf.json
+.terraformrc
+terraform.rc
+
+# ----------------------------------------------------------------------
+# Talos OS & Kubernetes Generated Files
+# ----------------------------------------------------------------------
+# Talos Admin Configuration (Root access to the OS)
+talosconfig
+talosconfig*
+
+# Generated Machine Configs (contain certs and keys)
+controlplane.yaml
+worker.yaml
+*.yaml.old
+
+# Kubernetes Admin Configuration (Cluster Admin Access)
+kubeconfig
+kubeconfig*
+config
+
+# ----------------------------------------------------------------------
+# OS & IDE System Files
+# ----------------------------------------------------------------------
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# VS Code
+.vscode/
+
+# IntelliJ / JetBrains
+.idea/
+*.iml
+
+# ----------------------------------------------------------------------
+# Miscellaneous
+# ----------------------------------------------------------------------
+# ISO files (too large for git)
+*.iso
+*.img
+
+# SSH Keys (if generated locally)
+.ssh/
+id_rsa
+id_rsa.pub
+
+# Local notes and backups
+*.bak
+*.tmp
+TODO.md
+notes.txt
