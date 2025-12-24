@@ -40,6 +40,11 @@ data "talos_machine_configuration" "controlplane" {
           disk  = "/dev/vda"
           image = "ghcr.io/siderolabs/installer:v1.12.0"
         }
+        kubelet = {
+          extraArgs = {
+            cloud-provider = "external"
+          }
+        }
       }
     })
   ]
@@ -62,6 +67,11 @@ data "talos_machine_configuration" "worker" {
         install = {
           disk  = "/dev/vda"
           image = "ghcr.io/siderolabs/installer:v1.12.0"
+        }
+        kubelet = {
+          extraArgs = {
+            cloud-provider = "external"
+          }
         }
       }
     })
