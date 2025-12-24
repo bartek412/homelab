@@ -48,6 +48,7 @@ env:
   TF_VAR_worker_memory: ${{ vars.WORKER_MEMORY || '4096' }}
   TF_VAR_worker_cores: ${{ vars.WORKER_CORES || '4' }}
   TF_VAR_worker_disk_size: ${{ vars.WORKER_DISK_SIZE || '50' }}
+  TF_VAR_csi_storage_class_name: ${{ vars.CSI_STORAGE_CLASS_NAME || 'proxmox' }}
 
 jobs:
   terraform:

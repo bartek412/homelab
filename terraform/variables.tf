@@ -53,6 +53,12 @@ variable "install_disk" {
   description = "Disk device for Talos installation (currently hardcoded due to provider bug)"
 }
 
+variable "csi_storage_class_name" {
+  type        = string
+  default     = "proxmox"
+  description = "Name of the StorageClass created by Proxmox CSI"
+}
+
 # ==============================================================================
 # Variables - Network
 # ==============================================================================
