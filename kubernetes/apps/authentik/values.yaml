@@ -3,26 +3,41 @@
 # Secrets are pulled from Vault via External Secrets Operator
 
 authentik:
-  # Secret key is pulled from Vault secret: kubernetes/authentik
-  secret_key: ""  # Loaded from authentik-secrets
+  secret_key: ""  # Loaded from authentik-secrets via AUTHENTIK_SECRET_KEY env
   error_reporting:
     enabled: false
   postgresql:
-    password: ""  # Loaded from authentik-secrets
+    password: ""  # Loaded via AUTHENTIK_POSTGRESQL__PASSWORD env
 
 server:
   replicas: 1
   ingress:
     enabled: false  # Using Traefik IngressRoute instead
-  envFrom:
-    - secretRef:
-        name: authentik-secrets
+  env:
+    - name: AUTHENTIK_SECRET_KEY
+      valueFrom:
+        secretKeyRef:
+          name: authentik-secrets
+          key: secret-key
+    - name: AUTHENTIK_POSTGRESQL__PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: authentik-secrets
+          key: postgres-password
 
 worker:
   replicas: 1
-  envFrom:
-    - secretRef:
-        name: authentik-secrets
+  env:
+    - name: AUTHENTIK_SECRET_KEY
+      valueFrom:
+        secretKeyRef:
+          name: authentik-secrets
+          key: secret-key
+    - name: AUTHENTIK_POSTGRESQL__PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: authentik-secrets
+          key: postgres-password
 
 postgresql:
   enabled: true
@@ -33,7 +48,7 @@ postgresql:
   image:
     registry: docker.io
     repository: bitnami/postgresql
-    tag: "16.4.0"
+    tag: latest
   primary:
     persistence:
       storageClass: proxmox
@@ -44,7 +59,7 @@ redis:
   image:
     registry: docker.io
     repository: bitnami/redis
-    tag: "7.4.0"
+    tag: latest
   master:
     persistence:
       storageClass: proxmox
