@@ -59,6 +59,18 @@ variable "csi_storage_class_name" {
   description = "Name of the StorageClass created by Proxmox CSI"
 }
 
+variable "nfs_server" {
+  type        = string
+  default     = "192.168.0.78"
+  description = "NFS server IP address"
+}
+
+variable "nfs_share_path" {
+  type        = string
+  default     = "/mnt/user/kubernetes-nfs"
+  description = "NFS export path on the server"
+}
+
 # ==============================================================================
 # Variables - Network
 # ==============================================================================

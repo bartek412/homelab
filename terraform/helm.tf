@@ -87,3 +87,34 @@ resource "helm_release" "proxmox_csi" {
     helm_release.proxmox_ccm
   ]
 }
+
+# ==============================================================================
+# NFS CSI Driver
+# ==============================================================================
+
+resource "helm_release" "nfs_csi" {
+  name       = "csi-driver-nfs"
+  repository = "https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts"
+  chart      = "csi-driver-nfs"
+  namespace  = "kube-system"
+  version    = "v4.9.0"
+
+  depends_on = [helm_release.proxmox_csi]
+}
+
+resource "kubernetes_storage_class_v1" "nfs" {
+  metadata {
+    name = "nfs"
+  }
+
+  storage_provisioner = "nfs.csi.k8s.io"
+  reclaim_policy      = "Retain"
+  volume_binding_mode = "Immediate"
+
+  parameters = {
+    server = var.nfs_server
+    share  = var.nfs_share_path
+  }
+
+  depends_on = [helm_release.nfs_csi]
+}
