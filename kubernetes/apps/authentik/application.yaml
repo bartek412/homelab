@@ -8,6 +8,12 @@ metadata:
 spec:
   project: default
   
+  ignoreDifferences:
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jsonPointers:
+        - /status
+  
   sources:
     # Helm chart
     - repoURL: https://charts.goauthentik.io
