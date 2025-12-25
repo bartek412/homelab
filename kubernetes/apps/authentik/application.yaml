@@ -22,10 +22,10 @@ spec:
       targetRevision: main
       ref: values
     
-    # Raw manifests processed by AVP
+    # Raw manifests processed by AVP (in separate directory)
     - repoURL: https://github.com/bartek412/homelab.git
       targetRevision: main
-      path: kubernetes/apps/authentik
+      path: kubernetes/apps/authentik/manifests
       plugin:
         name: avp
   
