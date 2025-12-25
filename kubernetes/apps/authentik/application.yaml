@@ -22,12 +22,10 @@ spec:
       targetRevision: main
       ref: values
     
-    # Raw manifests (IngressRoute, Certificate, ExternalSecret) - processed by AVP
+    # Raw manifests processed by AVP
     - repoURL: https://github.com/bartek412/homelab.git
       targetRevision: main
       path: kubernetes/apps/authentik
-      directory:
-        include: '{ingress.yaml,certificate.yaml,external-secret.yaml}'
       plugin:
         name: avp
   
