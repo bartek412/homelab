@@ -1,0 +1,35 @@
+# Authentik Helm Values
+# Documentation: https://docs.goauthentik.io/
+# Secrets are pulled from Vault via External Secrets Operator
+
+authentik:
+  # Secret key is pulled from Vault secret: kubernetes/authentik
+  secret_key: ""  # Loaded from authentik-secrets
+  error_reporting:
+    enabled: false
+  postgresql:
+    password: ""  # Loaded from authentik-secrets
+
+server:
+  replicas: 1
+  ingress:
+    enabled: false  # Using Traefik IngressRoute instead
+  envFrom:
+    - secretRef:
+        name: authentik-secrets
+
+worker:
+  replicas: 1
+  envFrom:
+    - secretRef:
+        name: authentik-secrets
+
+postgresql:
+  enabled: true
+  auth:
+    existingSecret: authentik-secrets
+    secretKeys:
+      userPasswordKey: postgres-password
+
+redis:
+  enabled: true
