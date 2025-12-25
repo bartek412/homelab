@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authentik
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  
+  sources:
+    # Helm chart
+    - repoURL: https://charts.goauthentik.io
+      chart: authentik
+      targetRevision: 2024.12.2
+      helm:
+        valueFiles:
+          - $values/kubernetes/apps/authentik/values.yaml
+    
+    # Values from Git repo
+    - repoURL: https://github.com/bartek412/homelab.git
+      targetRevision: main
+      ref: values
+    
+    # Raw manifests (IngressRoute, Certificate, ExternalSecret)
+    - repoURL: https://github.com/bartek412/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/authentik
+      directory:
+        include: '{ingress.yaml,certificate.yaml,external-secret.yaml}'
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: authentik
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

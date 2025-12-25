@@ -136,6 +136,7 @@ resource "helm_release" "argocd" {
   repository = "https://argoproj.github.io/argo-helm"
   chart      = "argo-cd"
   namespace  = kubernetes_namespace_v1.argocd.metadata[0].name
+  timeout    = 600
 
   values = [
     yamlencode({
@@ -143,11 +144,195 @@ resource "helm_release" "argocd" {
         params = {
           "server.insecure" = true
         }
+        # Configure AVP as config management plugin
+        cmp = {
+          create = true
+          plugins = {
+            avp = {
+              allowConcurrency = true
+              discover = {
+                find = {
+                  command = ["sh", "-c"]
+                  args    = ["find . -name '*.yaml' | xargs -I {} grep -l 'avp\\.kubernetes\\.io' {} || true"]
+                }
+              }
+              generate = {
+                command = ["argocd-vault-plugin"]
+                args    = ["generate", "./"]
+              }
+              lockRepo = false
+            }
+          }
+        }
+      }
+      # AVP sidecar for repo-server
+      repoServer = {
+        volumes = [
+          {
+            name = "custom-tools"
+            emptyDir = {}
+          },
+          {
+            name = "cmp-plugin"
+            configMap = {
+              name = "argocd-cmp-cm"
+            }
+          }
+        ]
+        initContainers = [
+          {
+            name  = "download-avp"
+            image = "alpine:3.18"
+            command = ["sh", "-c"]
+            args = [
+              "wget -O /custom-tools/argocd-vault-plugin https://github.com/argoproj-labs/argocd-vault-plugin/releases/download/v1.17.0/argocd-vault-plugin_1.17.0_linux_amd64 && chmod +x /custom-tools/argocd-vault-plugin"
+            ]
+            volumeMounts = [
+              {
+                name      = "custom-tools"
+                mountPath = "/custom-tools"
+              }
+            ]
+          }
+        ]
+        extraContainers = [
+          {
+            name    = "avp"
+            command = ["/var/run/argocd/argocd-cmp-server"]
+            image   = "quay.io/argoproj/argocd:v2.9.3"
+            securityContext = {
+              runAsNonRoot = true
+              runAsUser    = 999
+            }
+            env = [
+              {
+                name  = "AVP_TYPE"
+                value = "vault"
+              },
+              {
+                name  = "AVP_ADDR"
+                value = "http://10.9.0.50:8200"
+              },
+              {
+                name  = "AVP_AUTH_TYPE"
+                value = "token"
+              },
+              {
+                name = "AVP_TOKEN"
+                valueFrom = {
+                  secretKeyRef = {
+                    name = "argocd-vault-token"
+                    key  = "token"
+                  }
+                }
+              }
+            ]
+            volumeMounts = [
+              {
+                name      = "var-files"
+                mountPath = "/var/run/argocd"
+              },
+              {
+                name      = "plugins"
+                mountPath = "/home/argocd/cmp-server/plugins"
+              },
+              {
+                name      = "cmp-plugin"
+                mountPath = "/home/argocd/cmp-server/config/plugin.yaml"
+                subPath   = "avp.yaml"
+              },
+              {
+                name      = "custom-tools"
+                mountPath = "/usr/local/bin/argocd-vault-plugin"
+                subPath   = "argocd-vault-plugin"
+              }
+            ]
+          }
+        ]
       }
     })
   ]
 
   depends_on = [kubernetes_namespace_v1.argocd]
+}
+
+# AVP Token Secret
+resource "kubernetes_secret_v1" "argocd_vault_token" {
+  metadata {
+    name      = "argocd-vault-token"
+    namespace = kubernetes_namespace_v1.argocd.metadata[0].name
+  }
+
+  data = {
+    token = var.vault_token
+  }
+
+  depends_on = [kubernetes_namespace_v1.argocd]
+}
+
+# ArgoCD Variable Substitution ConfigMap
+resource "kubernetes_config_map_v1" "argocd_vars" {
+  metadata {
+    name      = "argocd-vars"
+    namespace = kubernetes_namespace_v1.argocd.metadata[0].name
+  }
+
+  data = {
+    DOMAIN = var.domain
+  }
+
+  depends_on = [kubernetes_namespace_v1.argocd]
+}
+
+# ArgoCD Certificate
+resource "kubectl_manifest" "argocd_certificate" {
+  yaml_body = <<-EOF
+    apiVersion: cert-manager.io/v1
+    kind: Certificate
+    metadata:
+      name: argocd-tls
+      namespace: argocd
+    spec:
+      secretName: argocd-tls
+      issuerRef:
+        name: letsencrypt-production
+        kind: ClusterIssuer
+      dnsNames:
+        - argocd.local.${var.domain}
+  EOF
+
+  depends_on = [
+    helm_release.argocd,
+    kubectl_manifest.letsencrypt_production
+  ]
+}
+
+# ArgoCD IngressRoute (internal only)
+resource "kubectl_manifest" "argocd_ingress" {
+  yaml_body = <<-EOF
+    apiVersion: traefik.io/v1alpha1
+    kind: IngressRoute
+    metadata:
+      name: argocd
+      namespace: argocd
+    spec:
+      entryPoints:
+        - websecure
+      routes:
+        - match: Host(`argocd.local.${var.domain}`)
+          kind: Rule
+          services:
+            - name: argocd-server
+              port: 80
+      tls:
+        secretName: argocd-tls
+  EOF
+
+  depends_on = [
+    helm_release.argocd,
+    kubectl_manifest.argocd_certificate,
+    helm_release.traefik_internal
+  ]
 }
 
 # ==============================================================================
@@ -269,7 +454,6 @@ resource "helm_release" "traefik_internal" {
         kubernetesCRD = {
           enabled              = true
           allowCrossNamespace  = true
-          ingressClass         = "traefik-internal"
         }
         kubernetesIngress = {
           enabled      = true
@@ -493,3 +677,77 @@ resource "kubectl_manifest" "letsencrypt_production" {
     kubernetes_secret_v1.cloudflare_api_token
   ]
 }
+
+# ==============================================================================
+# External Secrets Operator
+# ==============================================================================
+
+resource "kubernetes_namespace_v1" "external_secrets" {
+  metadata {
+    name = "external-secrets"
+  }
+
+  depends_on = [time_sleep.wait_for_cluster]
+}
+
+resource "helm_release" "external_secrets" {
+  name       = "external-secrets"
+  repository = "https://charts.external-secrets.io"
+  chart      = "external-secrets"
+  namespace  = kubernetes_namespace_v1.external_secrets.metadata[0].name
+  timeout    = 300
+
+  values = [
+    yamlencode({
+      installCRDs = true
+    })
+  ]
+
+  depends_on = [kubernetes_namespace_v1.external_secrets]
+}
+
+resource "time_sleep" "wait_for_external_secrets" {
+  depends_on      = [helm_release.external_secrets]
+  create_duration = "30s"
+}
+
+# Vault Token Secret
+resource "kubernetes_secret_v1" "vault_token" {
+  metadata {
+    name      = "vault-token"
+    namespace = kubernetes_namespace_v1.external_secrets.metadata[0].name
+  }
+
+  data = {
+    token = var.vault_token
+  }
+
+  depends_on = [kubernetes_namespace_v1.external_secrets]
+}
+
+# ClusterSecretStore for Vault
+resource "kubectl_manifest" "vault_secret_store" {
+  yaml_body = <<-EOF
+    apiVersion: external-secrets.io/v1
+    kind: ClusterSecretStore
+    metadata:
+      name: vault-backend
+    spec:
+      provider:
+        vault:
+          server: "http://10.9.0.50:8200"
+          path: "secret"
+          version: "v2"
+          auth:
+            tokenSecretRef:
+              name: vault-token
+              namespace: external-secrets
+              key: token
+  EOF
+
+  depends_on = [
+    time_sleep.wait_for_external_secrets,
+    kubernetes_secret_v1.vault_token
+  ]
+}
+

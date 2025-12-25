@@ -57,6 +57,9 @@ env:
   TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
   TF_VAR_cloudflare_email: ${{ vars.CLOUDFLARE_EMAIL }}
   TF_VAR_domain: ${{ vars.DOMAIN }}
+  
+  # External Secrets / Vault
+  TF_VAR_vault_token: ${{ secrets.VAULT_TOKEN }}
 
 jobs:
   terraform:

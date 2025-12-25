@@ -182,3 +182,13 @@ variable "domain" {
   type        = string
   description = "Primary domain for certificates (e.g., example.com)"
 }
+
+# ==============================================================================
+# Variables - External Secrets / Vault
+# ==============================================================================
+
+variable "vault_token" {
+  type        = string
+  sensitive   = true
+  description = "HashiCorp Vault token for External Secrets Operator"
+}
