@@ -214,11 +214,15 @@ resource "helm_release" "argocd" {
                 value = "http://10.9.0.50:8200"
               },
               {
+                name  = "VAULT_ADDR"
+                value = "http://10.9.0.50:8200"
+              },
+              {
                 name  = "AVP_AUTH_TYPE"
                 value = "token"
               },
               {
-                name = "AVP_TOKEN"
+                name = "VAULT_TOKEN"
                 valueFrom = {
                   secretKeyRef = {
                     name = "argocd-vault-token"
