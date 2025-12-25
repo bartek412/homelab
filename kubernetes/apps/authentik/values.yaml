@@ -30,6 +30,10 @@ postgresql:
     existingSecret: authentik-secrets
     secretKeys:
       userPasswordKey: postgres-password
+  image:
+    registry: docker.io
+    repository: bitnami/postgresql
+    tag: "16"  # Use latest stable tag
   primary:
     persistence:
       storageClass: proxmox
@@ -37,6 +41,10 @@ postgresql:
 
 redis:
   enabled: true
+  image:
+    registry: docker.io
+    repository: bitnami/redis
+    tag: "7.4"  # Use latest stable tag
   master:
     persistence:
       storageClass: proxmox
