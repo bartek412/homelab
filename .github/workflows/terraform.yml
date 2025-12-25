@@ -52,6 +52,11 @@ env:
   
   TF_VAR_nfs_server: ${{ vars.NFS_SERVER || '192.168.0.123' }}
   TF_VAR_nfs_share_path: ${{ vars.NFS_SHARE_PATH || '/mnt/user/kubernetes-nfs' }}
+  
+  # Cert-Manager / Cloudflare
+  TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  TF_VAR_cloudflare_email: ${{ vars.CLOUDFLARE_EMAIL }}
+  TF_VAR_domain: ${{ vars.DOMAIN }}
 
 jobs:
   terraform:

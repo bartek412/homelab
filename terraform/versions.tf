@@ -22,7 +22,19 @@ terraform {
       source  = "hashicorp/time"
       version = ">= 0.9.0"
     }
+    kubectl = {
+      source  = "alekc/kubectl"
+      version = ">= 2.0.0"
+    }
   }
+}
+
+provider "kubectl" {
+  host                   = talos_cluster_kubeconfig.this.kubernetes_client_configuration.host
+  client_certificate     = base64decode(talos_cluster_kubeconfig.this.kubernetes_client_configuration.client_certificate)
+  client_key             = base64decode(talos_cluster_kubeconfig.this.kubernetes_client_configuration.client_key)
+  cluster_ca_certificate = base64decode(talos_cluster_kubeconfig.this.kubernetes_client_configuration.ca_certificate)
+  load_config_file       = false
 }
 
 provider "proxmox" {

@@ -162,3 +162,23 @@ variable "worker_disk_size" {
   default     = 50
   description = "Disk size for worker VMs (GB)"
 }
+
+# ==============================================================================
+# Variables - Cert-Manager / Cloudflare
+# ==============================================================================
+
+variable "cloudflare_api_token" {
+  type        = string
+  sensitive   = true
+  description = "Cloudflare API token with Zone:DNS:Edit and Zone:Zone:Read permissions"
+}
+
+variable "cloudflare_email" {
+  type        = string
+  description = "Email address for Let's Encrypt certificate notifications"
+}
+
+variable "domain" {
+  type        = string
+  description = "Primary domain for certificates (e.g., example.com)"
+}
