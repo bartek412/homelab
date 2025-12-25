@@ -30,6 +30,14 @@ postgresql:
     existingSecret: authentik-secrets
     secretKeys:
       userPasswordKey: postgres-password
+  primary:
+    persistence:
+      storageClass: proxmox
+      size: 8Gi
 
 redis:
   enabled: true
+  master:
+    persistence:
+      storageClass: proxmox
+      size: 2Gi
