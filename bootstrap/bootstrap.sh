@@ -200,231 +200,115 @@ wait_for_cluster() {
     clusterctl get kubeconfig "$CLUSTER_NAME" > "$WORKLOAD_KUBECONFIG"
     chmod 600 "$WORKLOAD_KUBECONFIG"
 
-    log "Waiting for all machines to be ready..."
-    kubectl wait --for=condition=Ready machine --all --timeout=600s
+    log "Waiting for all nodes to be ready in workload cluster..."
+    local retries=0
+    local max_retries=120
+    while [[ $retries -lt $max_retries ]]; do
+        local ready_nodes
+        ready_nodes=$(KUBECONFIG="$WORKLOAD_KUBECONFIG" kubectl get nodes --no-headers 2>/dev/null | grep -c " Ready" || true)
+        if [[ "$ready_nodes" -ge 5 ]]; then
+            log "All $ready_nodes nodes are ready."
+            break
+        fi
+        retries=$((retries + 1))
+        if [[ $((retries % 10)) -eq 0 ]]; then
+            log "Waiting for nodes to be ready... ($ready_nodes/5 ready, attempt $retries/$max_retries)"
+        fi
+        sleep 5
+    done
+
+    if [[ $retries -ge $max_retries ]]; then
+        warn "Timed out waiting for all nodes, but continuing anyway..."
+    fi
 
     log "Cluster provisioned. Kubeconfig at: $WORKLOAD_KUBECONFIG"
 }
 
 # =============================================================================
-# Phase 4: Install Core Services on Workload Cluster
+# Phase 4: Install ArgoCD (app-of-apps handles the rest)
 # =============================================================================
 
 install_core_services() {
-    log "Installing core services on workload cluster..."
+    log "Installing ArgoCD (app-of-apps pattern)..."
     export KUBECONFIG="$WORKLOAD_KUBECONFIG"
 
-    install_proxmox_ccm_csi
-    install_metallb
-    install_traefik
-    install_cert_manager
-    install_nfs_csi
-    install_external_secrets
+    # Create secrets that ArgoCD apps depend on
+    create_ccm_csi_secrets
+    create_cloudflare_secret
+    create_vault_secrets
+
     install_argocd
 
-    log "All core services installed."
+    log "All core services installed via ArgoCD."
 }
 
-install_proxmox_ccm_csi() {
-    log "Installing Proxmox CCM..."
-    helm install proxmox-cloud-controller-manager \
-        oci://ghcr.io/sergelogvinov/charts/proxmox-cloud-controller-manager \
-        --namespace kube-system
+create_ccm_csi_secrets() {
+    log "Creating Proxmox CCM/CSI secrets..."
 
-    log "Installing Proxmox CSI..."
-    helm install proxmox-csi-plugin \
-        oci://ghcr.io/sergelogvinov/charts/proxmox-csi-plugin \
+    local token_id="${PROXMOX_TOKEN%%=*}"
+    local token_secret="${PROXMOX_TOKEN#*=}"
+    local proxmox_api_url="${PROXMOX_URL%/}/api2/json"
+
+    # CCM secret
+    kubectl create secret generic proxmox-cloud-controller-manager \
         --namespace kube-system \
-        --set "storageClass[0].name=proxmox" \
-        --set "storageClass[0].storage=nvme-zfs" \
-        --set "storageClass[0].reclaimPolicy=Delete" \
-        --set "storageClass[0].default=true" \
-        --set "storageClass[0].ssd=true" \
-        --set "storageClass[0].backup=true"
-
-    log "Waiting for CCM to initialize nodes..."
-    kubectl wait --for=condition=Ready nodes --all --timeout=300s
-}
-
-install_metallb() {
-    log "Installing MetalLB..."
-    kubectl create namespace metallb-system \
-        --dry-run=client -o yaml | kubectl apply -f -
-    kubectl label namespace metallb-system \
-        pod-security.kubernetes.io/enforce=privileged \
-        pod-security.kubernetes.io/audit=privileged \
-        pod-security.kubernetes.io/warn=privileged \
-        --overwrite
-
-    helm repo add metallb https://metallb.github.io/metallb
-    helm repo update metallb
-    helm install metallb metallb/metallb \
-        --namespace metallb-system \
-        --wait \
-        --set speaker.tolerations[0].key=node-role.kubernetes.io/control-plane \
-        --set speaker.tolerations[0].operator=Exists \
-        --set speaker.tolerations[0].effect=NoSchedule \
-        --set speaker.frr.enabled=false
-
-    log "Configuring MetalLB IP pool..."
-    cat <<EOF | kubectl apply -f -
-apiVersion: metallb.io/v1beta1
-kind: IPAddressPool
-metadata:
-  name: default-pool
-  namespace: metallb-system
-spec:
-  addresses:
-    - "10.9.0.230-10.9.0.240"
----
-apiVersion: metallb.io/v1beta1
-kind: L2Advertisement
-metadata:
-  name: default
-  namespace: metallb-system
-spec:
-  ipAddressPools:
-    - default-pool
+        --from-literal=config.yaml="$(cat <<EOF
+clusters:
+  - url: "${proxmox_api_url}"
+    insecure: true
+    token_id: "${token_id}"
+    token_secret: "${token_secret}"
+    region: "ryzen"
 EOF
+)" \
+        --dry-run=client -o yaml | kubectl apply -f -
+
+    # CSI secret
+    kubectl create secret generic proxmox-csi-plugin \
+        --namespace kube-system \
+        --from-literal=config.yaml="$(cat <<EOF
+clusters:
+  - url: "${proxmox_api_url}"
+    insecure: true
+    token_id: "${token_id}"
+    token_secret: "${token_secret}"
+    region: "ryzen"
+EOF
+)" \
+        --dry-run=client -o yaml | kubectl apply -f -
 }
 
-install_traefik() {
-    log "Installing Traefik..."
-    kubectl create namespace traefik --dry-run=client -o yaml | kubectl apply -f -
-
-    helm repo add traefik https://traefik.github.io/charts
-    helm repo update traefik
-
-    # Internal Traefik (LAN only)
-    helm install traefik-internal traefik/traefik \
-        --namespace traefik \
-        --values "$REPO_ROOT/kubernetes/infrastructure/traefik/values-internal.yaml"
-
-    # External Traefik (internet-facing)
-    helm install traefik-external traefik/traefik \
-        --namespace traefik \
-        --values "$REPO_ROOT/kubernetes/infrastructure/traefik/values-external.yaml"
-}
-
-install_cert_manager() {
-    log "Installing cert-manager..."
-    kubectl create namespace cert-manager --dry-run=client -o yaml | kubectl apply -f -
-
-    helm repo add jetstack https://charts.jetstack.io
-    helm repo update jetstack
-    helm install cert-manager jetstack/cert-manager \
-        --namespace cert-manager \
-        --version v1.16.2 \
-        --set crds.enabled=true \
-        --wait
-
+create_cloudflare_secret() {
     log "Creating Cloudflare API token secret..."
+    kubectl create namespace cert-manager --dry-run=client -o yaml | kubectl apply -f -
     kubectl create secret generic cloudflare-api-token \
         --namespace cert-manager \
         --from-literal=api-token="$CLOUDFLARE_API_TOKEN" \
         --dry-run=client -o yaml | kubectl apply -f -
-
-    log "Creating ClusterIssuers..."
-    cat <<EOF | kubectl apply -f -
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-staging
-spec:
-  acme:
-    server: https://acme-staging-v02.api.letsencrypt.org/directory
-    email: ${CLOUDFLARE_EMAIL}
-    privateKeySecretRef:
-      name: letsencrypt-staging-key
-    solvers:
-      - dns01:
-          cloudflare:
-            apiTokenSecretRef:
-              name: cloudflare-api-token
-              key: api-token
----
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-production
-spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: ${CLOUDFLARE_EMAIL}
-    privateKeySecretRef:
-      name: letsencrypt-production-key
-    solvers:
-      - dns01:
-          cloudflare:
-            apiTokenSecretRef:
-              name: cloudflare-api-token
-              key: api-token
-EOF
 }
 
-install_nfs_csi() {
-    log "Installing NFS CSI driver..."
-    helm repo add csi-driver-nfs https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
-    helm repo update csi-driver-nfs
-    helm install csi-driver-nfs csi-driver-nfs/csi-driver-nfs \
-        --namespace kube-system \
-        --version v4.9.0
-
-    cat <<EOF | kubectl apply -f -
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: nfs
-provisioner: nfs.csi.k8s.io
-reclaimPolicy: Retain
-volumeBindingMode: Immediate
-parameters:
-  server: "192.168.0.78"
-  share: "/mnt/user/kubernetes-nfs"
-EOF
-}
-
-install_external_secrets() {
-    log "Installing External Secrets Operator..."
+create_vault_secrets() {
+    log "Creating Vault token secrets..."
     kubectl create namespace external-secrets --dry-run=client -o yaml | kubectl apply -f -
-
-    helm repo add external-secrets https://charts.external-secrets.io
-    helm repo update external-secrets
-    helm install external-secrets external-secrets/external-secrets \
-        --namespace external-secrets \
-        --set installCRDs=true \
-        --wait
-
-    log "Creating Vault token secret..."
     kubectl create secret generic vault-token \
         --namespace external-secrets \
         --from-literal=token="$VAULT_TOKEN" \
         --dry-run=client -o yaml | kubectl apply -f -
 
-    log "Creating ClusterSecretStore..."
-    cat <<EOF | kubectl apply -f -
-apiVersion: external-secrets.io/v1
-kind: ClusterSecretStore
-metadata:
-  name: vault-backend
-spec:
-  provider:
-    vault:
-      server: "http://10.9.0.50:8200"
-      path: "secret"
-      version: "v2"
-      auth:
-        tokenSecretRef:
-          name: vault-token
-          namespace: external-secrets
-          key: token
-EOF
+    kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+    kubectl create secret generic argocd-vault-token \
+        --namespace argocd \
+        --from-literal=token="$VAULT_TOKEN" \
+        --dry-run=client -o yaml | kubectl apply -f -
+
+    kubectl create configmap argocd-vars \
+        --namespace argocd \
+        --from-literal=DOMAIN="$DOMAIN" \
+        --dry-run=client -o yaml | kubectl apply -f -
 }
 
 install_argocd() {
     log "Installing ArgoCD..."
-    kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
-
     helm repo add argo https://argoproj.github.io/argo-helm
     helm repo update argo
     helm install argocd argo/argo-cd \
@@ -432,21 +316,6 @@ install_argocd() {
         --timeout 600s \
         --values "$REPO_ROOT/kubernetes/infrastructure/argocd/values.yaml" \
         --wait
-
-    log "Creating ArgoCD Vault token..."
-    kubectl create secret generic argocd-vault-token \
-        --namespace argocd \
-        --from-literal=token="$VAULT_TOKEN" \
-        --dry-run=client -o yaml | kubectl apply -f -
-
-    log "Creating ArgoCD variables ConfigMap..."
-    kubectl create configmap argocd-vars \
-        --namespace argocd \
-        --from-literal=DOMAIN="$DOMAIN" \
-        --dry-run=client -o yaml | kubectl apply -f -
-
-    log "Creating ArgoCD certificate and ingress..."
-    kubectl apply -f "$REPO_ROOT/kubernetes/infrastructure/argocd/manifests/"
 
     log "Applying ArgoCD root applications..."
     kubectl apply -f "$REPO_ROOT/kubernetes/infrastructure/infra-root-app.yaml"
@@ -465,19 +334,20 @@ pivot_to_workload_cluster() {
         --infrastructure proxmox \
         --bootstrap talos \
         --control-plane talos \
-        --ipam in-cluster
+        --ipam in-cluster \
+        --wait-providers-timeout 600
 
     log "Waiting for CAPI controllers on workload cluster..."
     KUBECONFIG="$WORKLOAD_KUBECONFIG" kubectl wait \
-        --for=condition=Available deployment --all -n capmox-system --timeout=120s
+        --for=condition=Available deployment --all -n capmox-system --timeout=300s
     KUBECONFIG="$WORKLOAD_KUBECONFIG" kubectl wait \
-        --for=condition=Available deployment --all -n cabpt-system --timeout=120s
+        --for=condition=Available deployment --all -n cabpt-system --timeout=300s
     KUBECONFIG="$WORKLOAD_KUBECONFIG" kubectl wait \
-        --for=condition=Available deployment --all -n cacppt-system --timeout=120s
+        --for=condition=Available deployment --all -n cacppt-system --timeout=300s
     KUBECONFIG="$WORKLOAD_KUBECONFIG" kubectl wait \
-        --for=condition=Available deployment --all -n capi-system --timeout=120s
+        --for=condition=Available deployment --all -n capi-system --timeout=300s
     KUBECONFIG="$WORKLOAD_KUBECONFIG" kubectl wait \
-        --for=condition=Available deployment --all -n capi-ipam-in-cluster-system --timeout=120s
+        --for=condition=Available deployment --all -n capi-ipam-in-cluster-system --timeout=300s
 
     # Switch back to management cluster for the move
     unset KUBECONFIG

@@ -56,13 +56,11 @@ spec:
             network:
               interfaces:
                 - interface: eth0
-                  dhcp: true
                   vip:
                     ip: 10.9.0.210
             kubelet:
               extraArgs:
                 cloud-provider: external
-                rotate-server-certificates: "true"
             features:
               kubernetesTalosAPIAccess:
                 enabled: true

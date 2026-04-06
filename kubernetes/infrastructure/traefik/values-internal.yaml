@@ -24,22 +24,19 @@ ports:
     exposedPort: 80
     expose:
       default: true
-    redirections:
-      entryPoint:
-        to: websecure
-        scheme: https
   websecure:
     port: 8443
     exposedPort: 443
     expose:
       default: true
-    tls:
-      enabled: true
 
 service:
   type: LoadBalancer
   annotations:
     metallb.universe.tf/loadBalancerIPs: "10.9.0.230"
 
-serversTransport:
-  insecureSkipVerify: true
+globalArguments:
+  - "--serversTransport.insecureSkipVerify=true"
+  - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+  - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+  - "--entrypoints.websecure.tls=true"

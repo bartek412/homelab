@@ -21,6 +21,15 @@ configs:
             - ./
         lockRepo: false
 
+global:
+  tolerations:
+    - key: node.cloudprovider.kubernetes.io/uninitialized
+      operator: Exists
+      effect: NoSchedule
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+
 repoServer:
   volumes:
     - name: custom-tools

@@ -44,10 +44,12 @@ spec:
           machine:
             install:
               disk: /dev/sda
+            network:
+              interfaces:
+                - interface: eth0
             kubelet:
               extraArgs:
                 cloud-provider: external
-                rotate-server-certificates: "true"
 ---
 apiVersion: cluster.x-k8s.io/v1beta2
 kind: MachineDeployment

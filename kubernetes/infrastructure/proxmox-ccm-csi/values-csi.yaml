@@ -1,0 +1,8 @@
+# Proxmox CSI plugin configuration
+storageClass:
+  - name: proxmox
+    storage: nvme-zfs
+    reclaimPolicy: Delete
+    default: true
+    ssd: true
+    backup: true
