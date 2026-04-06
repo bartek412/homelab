@@ -102,13 +102,15 @@ install_capi_providers() {
     clusterctl init \
         --infrastructure proxmox \
         --bootstrap talos \
-        --control-plane talos
+        --control-plane talos \
+        --ipam in-cluster
 
     log "Waiting for CAPI controllers to be ready..."
     kubectl wait --for=condition=Available deployment --all -n capmox-system --timeout=120s
     kubectl wait --for=condition=Available deployment --all -n cabpt-system --timeout=120s
     kubectl wait --for=condition=Available deployment --all -n cacppt-system --timeout=120s
     kubectl wait --for=condition=Available deployment --all -n capi-system --timeout=120s
+    kubectl wait --for=condition=Available deployment --all -n capi-ipam-in-cluster-system --timeout=120s
 
     log "CAPI providers ready."
 }
@@ -126,6 +128,7 @@ create_proxmox_credentials() {
     local proxmox_api_url="${PROXMOX_URL%/}/api2/json"
 
     # Secret for CAPMOX provider (management cluster)
+    # CAPMOX expects keys: 'token', 'secret', 'url'
     kubectl create secret generic "${CLUSTER_NAME}-proxmox-credentials" \
         --from-literal=token="${token_id}" \
         --from-literal=secret="${token_secret}" \
@@ -461,7 +464,8 @@ pivot_to_workload_cluster() {
     KUBECONFIG="$WORKLOAD_KUBECONFIG" clusterctl init \
         --infrastructure proxmox \
         --bootstrap talos \
-        --control-plane talos
+        --control-plane talos \
+        --ipam in-cluster
 
     log "Waiting for CAPI controllers on workload cluster..."
     KUBECONFIG="$WORKLOAD_KUBECONFIG" kubectl wait \
@@ -472,6 +476,8 @@ pivot_to_workload_cluster() {
         --for=condition=Available deployment --all -n cacppt-system --timeout=120s
     KUBECONFIG="$WORKLOAD_KUBECONFIG" kubectl wait \
         --for=condition=Available deployment --all -n capi-system --timeout=120s
+    KUBECONFIG="$WORKLOAD_KUBECONFIG" kubectl wait \
+        --for=condition=Available deployment --all -n capi-ipam-in-cluster-system --timeout=120s
 
     # Switch back to management cluster for the move
     unset KUBECONFIG

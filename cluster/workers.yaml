@@ -10,7 +10,7 @@ spec:
     spec:
       sourceNode: ryzen
       templateID: 9000
-      format: qcow2
+      format: raw
       full: true
       numSockets: 1
       numCores: 4
@@ -25,6 +25,7 @@ spec:
           model: virtio
       checks:
         skipCloudInitStatus: true
+        skipQemuGuestAgent: true
       metadataSettings:
         providerIDInjection: true
 ---
@@ -37,19 +38,18 @@ spec:
   template:
     spec:
       generateType: worker
-      talosVersion: v1.9
-      configPatches:
-        - op: replace
-          path: /machine/install
-          value:
-            disk: /dev/sda
-        - op: add
-          path: /machine/kubelet/extraArgs
-          value:
-            cloud-provider: external
-            rotate-server-certificates: "true"
+      talosVersion: v1.12
+      strategicPatches:
+        - |
+          machine:
+            install:
+              disk: /dev/sda
+            kubelet:
+              extraArgs:
+                cloud-provider: external
+                rotate-server-certificates: "true"
 ---
-apiVersion: cluster.x-k8s.io/v1beta1
+apiVersion: cluster.x-k8s.io/v1beta2
 kind: MachineDeployment
 metadata:
   name: homelab-cluster-workers
@@ -71,10 +71,10 @@ spec:
       version: v1.32.0
       bootstrap:
         configRef:
-          apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
+          apiGroup: bootstrap.cluster.x-k8s.io
           kind: TalosConfigTemplate
           name: homelab-cluster-worker
       infrastructureRef:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+        apiGroup: infrastructure.cluster.x-k8s.io
         kind: ProxmoxMachineTemplate
         name: homelab-cluster-worker

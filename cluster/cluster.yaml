@@ -1,5 +1,5 @@
 ---
-apiVersion: cluster.x-k8s.io/v1beta1
+apiVersion: cluster.x-k8s.io/v1beta2
 kind: Cluster
 metadata:
   name: homelab-cluster
@@ -15,11 +15,11 @@ spec:
       cidrBlocks:
         - 10.96.0.0/12
   controlPlaneRef:
-    apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+    apiGroup: controlplane.cluster.x-k8s.io
     kind: TalosControlPlane
     name: homelab-cluster-cp
   infrastructureRef:
-    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+    apiGroup: infrastructure.cluster.x-k8s.io
     kind: ProxmoxCluster
     name: homelab-cluster
 ---
@@ -31,16 +31,23 @@ metadata:
   labels:
     cluster.x-k8s.io/cluster-name: homelab-cluster
 spec:
+  credentialsRef:
+    name: homelab-cluster-proxmox-credentials
+  # Override CAPMOX memory scheduler — existing VMs on the node make it think
+  # memory is exhausted. This adds 64GB to the "available" calculation,
+  # effectively letting Proxmox handle overcommit natively.
+  schedulerHints:
+    memoryAdjustment: 68719476736
   # VIP that floats between control plane nodes
   controlPlaneEndpoint:
-    host: 192.168.0.210
+    host: 10.9.0.210
     port: 6443
   ipv4Config:
     addresses:
-      - 192.168.0.211-192.168.0.215
+      - 10.9.0.211-10.9.0.215
     prefix: 24
-    gateway: 192.168.0.1
+    gateway: 10.9.0.1
   dnsServers:
-    - 192.168.0.1
+    - 10.9.0.1
   allowedNodes:
     - ryzen

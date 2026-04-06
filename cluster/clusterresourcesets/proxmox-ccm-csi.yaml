@@ -4,7 +4,7 @@
 #
 # NOTE: Before applying, run bootstrap.sh --generate-secrets to create the
 # proxmox-crs-secrets ConfigMap with your actual Proxmox credentials.
-apiVersion: addons.cluster.x-k8s.io/v1beta1
+apiVersion: addons.cluster.x-k8s.io/v1beta2
 kind: ClusterResourceSet
 metadata:
   name: proxmox-credentials

@@ -12,7 +12,7 @@ spec:
     spec:
       sourceNode: ryzen
       templateID: 9000
-      format: qcow2
+      format: raw
       full: true
       numSockets: 1
       numCores: 2
@@ -47,34 +47,29 @@ spec:
   controlPlaneConfig:
     controlplane:
       generateType: controlplane
-      talosVersion: v1.9
+      talosVersion: v1.12
       strategicPatches:
         - |
-          - op: replace
-            path: /machine/install
-            value:
+          machine:
+            install:
               disk: /dev/sda
-          - op: add
-            path: /machine/network/interfaces
-            value:
-              - interface: eth0
-                dhcp: false
-                vip:
-                  ip: 192.168.0.210
-          - op: add
-            path: /machine/kubelet/extraArgs
-            value:
-              cloud-provider: external
-              rotate-server-certificates: "true"
-          - op: add
-            path: /cluster/externalCloudProvider
-            value:
+            network:
+              interfaces:
+                - interface: eth0
+                  dhcp: true
+                  vip:
+                    ip: 10.9.0.210
+            kubelet:
+              extraArgs:
+                cloud-provider: external
+                rotate-server-certificates: "true"
+            features:
+              kubernetesTalosAPIAccess:
+                enabled: true
+                allowedRoles:
+                  - os:reader
+                allowedKubernetesNamespaces:
+                  - kube-system
+          cluster:
+            externalCloudProvider:
               enabled: true
-          - op: add
-            path: /machine/features/kubernetesTalosAPIAccess
-            value:
-              enabled: true
-              allowedRoles:
-                - os:reader
-              allowedKubernetesNamespaces:
-                - kube-system

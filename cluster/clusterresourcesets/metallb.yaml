@@ -2,7 +2,7 @@
 # ClusterResourceSet: Creates MetalLB namespace with required labels.
 # The actual MetalLB Helm release, IPAddressPool, and L2Advertisement
 # are installed by bootstrap.sh and managed by ArgoCD.
-apiVersion: addons.cluster.x-k8s.io/v1beta1
+apiVersion: addons.cluster.x-k8s.io/v1beta2
 kind: ClusterResourceSet
 metadata:
   name: metallb-namespace
