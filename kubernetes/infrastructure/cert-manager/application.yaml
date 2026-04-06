@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  sources:
+    # Helm chart
+    - repoURL: https://charts.jetstack.io
+      chart: cert-manager
+      targetRevision: v1.16.2
+      helm:
+        valueFiles:
+          - $values/kubernetes/infrastructure/cert-manager/values.yaml
+
+    # Values from Git
+    - repoURL: https://github.com/bartek412/homelab.git
+      targetRevision: main
+      ref: values
+
+    # ClusterIssuers (processed by AVP for email substitution)
+    - repoURL: https://github.com/bartek412/homelab.git
+      targetRevision: main
+      path: kubernetes/infrastructure/cert-manager/manifests
+      plugin:
+        name: avp
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

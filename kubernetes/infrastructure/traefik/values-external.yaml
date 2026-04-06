@@ -1,0 +1,42 @@
+deployment:
+  replicas: 1
+
+ingressClass:
+  enabled: true
+  isDefaultClass: false
+  name: traefik-external
+
+providers:
+  kubernetesCRD:
+    enabled: true
+    allowCrossNamespace: true
+    ingressClass: traefik-external
+  kubernetesIngress:
+    enabled: true
+    ingressClass: traefik-external
+
+ports:
+  web:
+    port: 8000
+    exposedPort: 80
+    expose:
+      default: true
+    redirections:
+      entryPoint:
+        to: websecure
+        scheme: https
+  websecure:
+    port: 8443
+    exposedPort: 443
+    expose:
+      default: true
+    tls:
+      enabled: true
+
+service:
+  type: LoadBalancer
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: "10.9.0.231"
+
+serversTransport:
+  insecureSkipVerify: true

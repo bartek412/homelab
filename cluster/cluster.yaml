@@ -1,0 +1,46 @@
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: homelab-cluster
+  namespace: default
+  labels:
+    cluster.x-k8s.io/cluster-name: homelab-cluster
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+        - 10.244.0.0/16
+    services:
+      cidrBlocks:
+        - 10.96.0.0/12
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+    kind: TalosControlPlane
+    name: homelab-cluster-cp
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+    kind: ProxmoxCluster
+    name: homelab-cluster
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: ProxmoxCluster
+metadata:
+  name: homelab-cluster
+  namespace: default
+  labels:
+    cluster.x-k8s.io/cluster-name: homelab-cluster
+spec:
+  # VIP that floats between control plane nodes
+  controlPlaneEndpoint:
+    host: 192.168.0.210
+    port: 6443
+  ipv4Config:
+    addresses:
+      - 192.168.0.211-192.168.0.215
+    prefix: 24
+    gateway: 192.168.0.1
+  dnsServers:
+    - 192.168.0.1
+  allowedNodes:
+    - ryzen

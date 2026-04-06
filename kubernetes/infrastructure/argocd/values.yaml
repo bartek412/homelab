@@ -1,0 +1,74 @@
+configs:
+  params:
+    server.insecure: true
+  cmp:
+    create: true
+    plugins:
+      avp:
+        allowConcurrency: true
+        discover:
+          find:
+            command:
+              - sh
+              - "-c"
+            args:
+              - "find . -name '*.yaml' | xargs -I {} grep -l 'avp\\.kubernetes\\.io' {} || true"
+        generate:
+          command:
+            - argocd-vault-plugin
+          args:
+            - generate
+            - ./
+        lockRepo: false
+
+repoServer:
+  volumes:
+    - name: custom-tools
+      emptyDir: {}
+    - name: cmp-plugin
+      configMap:
+        name: argocd-cmp-cm
+  initContainers:
+    - name: download-avp
+      image: alpine:3.18
+      command:
+        - sh
+        - "-c"
+      args:
+        - "wget -O /custom-tools/argocd-vault-plugin https://github.com/argoproj-labs/argocd-vault-plugin/releases/download/v1.17.0/argocd-vault-plugin_1.17.0_linux_amd64 && chmod +x /custom-tools/argocd-vault-plugin"
+      volumeMounts:
+        - name: custom-tools
+          mountPath: /custom-tools
+  extraContainers:
+    - name: avp
+      command:
+        - /var/run/argocd/argocd-cmp-server
+      image: quay.io/argoproj/argocd:v2.9.3
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+      env:
+        - name: AVP_TYPE
+          value: vault
+        - name: AVP_ADDR
+          value: "http://10.9.0.50:8200"
+        - name: VAULT_ADDR
+          value: "http://10.9.0.50:8200"
+        - name: AVP_AUTH_TYPE
+          value: token
+        - name: VAULT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: argocd-vault-token
+              key: token
+      volumeMounts:
+        - name: var-files
+          mountPath: /var/run/argocd
+        - name: plugins
+          mountPath: /home/argocd/cmp-server/plugins
+        - name: cmp-plugin
+          mountPath: /home/argocd/cmp-server/config/plugin.yaml
+          subPath: avp.yaml
+        - name: custom-tools
+          mountPath: /usr/local/bin/argocd-vault-plugin
+          subPath: argocd-vault-plugin

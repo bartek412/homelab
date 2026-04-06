@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  sources:
+    # Helm chart
+    - repoURL: https://argoproj.github.io/argo-helm
+      chart: argo-cd
+      targetRevision: "*"
+      helm:
+        valueFiles:
+          - $values/kubernetes/infrastructure/argocd/values.yaml
+
+    # Values from Git
+    - repoURL: https://github.com/bartek412/homelab.git
+      targetRevision: main
+      ref: values
+
+    # Certificate + IngressRoute (processed by AVP)
+    - repoURL: https://github.com/bartek412/homelab.git
+      targetRevision: main
+      path: kubernetes/infrastructure/argocd/manifests
+      plugin:
+        name: avp
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

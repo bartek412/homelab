@@ -1,0 +1,35 @@
+name: Validate Manifests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cluster/**'
+      - 'kubernetes/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'cluster/**'
+      - 'kubernetes/**'
+
+jobs:
+  validate:
+    name: Validate YAML
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate YAML syntax
+        run: |
+          find cluster/ kubernetes/ -name '*.yaml' -exec python3 -c "
+          import yaml, sys
+          try:
+              with open(sys.argv[1]) as f:
+                  list(yaml.safe_load_all(f))
+              print(f'  OK: {sys.argv[1]}')
+          except Exception as e:
+              print(f'FAIL: {sys.argv[1]}: {e}')
+              sys.exit(1)
+          " {} \;

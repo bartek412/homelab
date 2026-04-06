@@ -1,0 +1,33 @@
+---
+# ClusterResourceSet: Creates MetalLB namespace with required labels.
+# The actual MetalLB Helm release, IPAddressPool, and L2Advertisement
+# are installed by bootstrap.sh and managed by ArgoCD.
+apiVersion: addons.cluster.x-k8s.io/v1beta1
+kind: ClusterResourceSet
+metadata:
+  name: metallb-namespace
+  namespace: default
+spec:
+  clusterSelector:
+    matchLabels:
+      cluster.x-k8s.io/cluster-name: homelab-cluster
+  strategy: ApplyOnce
+  resources:
+    - kind: ConfigMap
+      name: metallb-namespace-manifest
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metallb-namespace-manifest
+  namespace: default
+data:
+  metallb-ns.yaml: |
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: metallb-system
+      labels:
+        pod-security.kubernetes.io/enforce: privileged
+        pod-security.kubernetes.io/audit: privileged
+        pod-security.kubernetes.io/warn: privileged

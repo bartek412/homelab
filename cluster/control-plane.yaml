@@ -1,0 +1,80 @@
+---
+# Control Plane ProxmoxMachineTemplate
+# IMPORTANT: templateID must match a Talos VM template created in Proxmox.
+# See bootstrap/README.md for how to create the template.
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: ProxmoxMachineTemplate
+metadata:
+  name: homelab-cluster-cp
+  namespace: default
+spec:
+  template:
+    spec:
+      sourceNode: ryzen
+      templateID: 9000
+      format: qcow2
+      full: true
+      numSockets: 1
+      numCores: 2
+      memoryMiB: 2048
+      disks:
+        bootVolume:
+          disk: scsi0
+          sizeGb: 20
+      network:
+        default:
+          bridge: vmbr0
+          model: virtio
+      checks:
+        skipCloudInitStatus: true
+        skipQemuGuestAgent: true
+      metadataSettings:
+        providerIDInjection: true
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+kind: TalosControlPlane
+metadata:
+  name: homelab-cluster-cp
+  namespace: default
+spec:
+  version: v1.32.0
+  replicas: 3
+  infrastructureTemplate:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+    kind: ProxmoxMachineTemplate
+    name: homelab-cluster-cp
+    namespace: default
+  controlPlaneConfig:
+    controlplane:
+      generateType: controlplane
+      talosVersion: v1.9
+      strategicPatches:
+        - |
+          - op: replace
+            path: /machine/install
+            value:
+              disk: /dev/sda
+          - op: add
+            path: /machine/network/interfaces
+            value:
+              - interface: eth0
+                dhcp: false
+                vip:
+                  ip: 192.168.0.210
+          - op: add
+            path: /machine/kubelet/extraArgs
+            value:
+              cloud-provider: external
+              rotate-server-certificates: "true"
+          - op: add
+            path: /cluster/externalCloudProvider
+            value:
+              enabled: true
+          - op: add
+            path: /machine/features/kubernetesTalosAPIAccess
+            value:
+              enabled: true
+              allowedRoles:
+                - os:reader
+              allowedKubernetesNamespaces:
+                - kube-system
