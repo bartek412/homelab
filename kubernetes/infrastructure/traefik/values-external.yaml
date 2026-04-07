@@ -32,8 +32,5 @@ service:
   annotations:
     metallb.universe.tf/loadBalancerIPs: "10.9.0.231"
 
-globalArguments:
+additionalArguments:
   - "--serversTransport.insecureSkipVerify=true"
-  - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
-  - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
-  - "--entrypoints.websecure.tls=true"
