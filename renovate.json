@@ -1,0 +1,25 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "argocd": {
+    "fileMatch": [
+      "kubernetes/.+/application\\.yaml$"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "Group all infrastructure updates",
+      "matchFileNames": ["kubernetes/infrastructure/**"],
+      "groupName": "infrastructure",
+      "automerge": false
+    },
+    {
+      "description": "Group all app updates",
+      "matchFileNames": ["kubernetes/apps/**"],
+      "groupName": "apps",
+      "automerge": false
+    }
+  ]
+}
