@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: technitium-dns
+  namespace: technitium
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: "10.9.0.232"
+    metallb.universe.tf/allow-shared-ip: "technitium"
+spec:
+  type: LoadBalancer
+  selector:
+    app: technitium
+  ports:
+    - name: dns-tcp
+      port: 53
+      targetPort: 53
+      protocol: TCP
+    - name: dns-udp
+      port: 53
+      targetPort: 53
+      protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: technitium-web
+  namespace: technitium
+spec:
+  type: ClusterIP
+  selector:
+    app: technitium
+  ports:
+    - name: web
+      port: 80
+      targetPort: 5380
+      protocol: TCP

@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: technitium
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  sources:
+    - repoURL: https://github.com/bartek412/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/technitium/manifests
+      plugin:
+        name: avp
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: technitium
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

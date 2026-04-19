@@ -1,0 +1,18 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: technitium
+  namespace: technitium
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`dns.local.<domain>`)
+      kind: Rule
+      services:
+        - name: technitium-web
+          port: 80
+  tls:
+    secretName: technitium-tls

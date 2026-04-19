@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: technitium
+  namespace: technitium
+  labels:
+    app: technitium
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: technitium
+  template:
+    metadata:
+      labels:
+        app: technitium
+    spec:
+      containers:
+        - name: technitium
+          image: technitium/dns-server:latest
+          ports:
+            - name: dns-tcp
+              containerPort: 53
+              protocol: TCP
+            - name: dns-udp
+              containerPort: 53
+              protocol: UDP
+            - name: web
+              containerPort: 5380
+              protocol: TCP
+          env:
+            - name: DNS_SERVER_DOMAIN
+              value: "dns-server"
+            - name: DNS_SERVER_ADMIN_PASSWORD_FILE
+              value: ""
+          volumeMounts:
+            - name: config
+              mountPath: /etc/dns
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: technitium-config
