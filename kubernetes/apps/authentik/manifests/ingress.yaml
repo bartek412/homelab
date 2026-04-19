@@ -16,3 +16,22 @@ spec:
           port: 80
   tls:
     secretName: authentik-tls
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: authentik-external
+  namespace: authentik
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`authentik.<domain>`)
+      kind: Rule
+      services:
+        - name: authentik-server
+          port: 80
+  tls:
+    secretName: authentik-external-tls

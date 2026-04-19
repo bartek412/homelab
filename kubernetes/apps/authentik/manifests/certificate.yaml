@@ -12,3 +12,18 @@ spec:
     kind: ClusterIssuer
   dnsNames:
     - authentik.local.<domain>
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: authentik-external-tls
+  namespace: authentik
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  secretName: authentik-external-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - authentik.<domain>
