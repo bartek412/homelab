@@ -24,6 +24,7 @@ metadata:
   namespace: authentik
   annotations:
     avp.kubernetes.io/path: "secret/data/kubernetes/config"
+    kubernetes.io/ingress.class: traefik-external
 spec:
   entryPoints:
     - websecure
