@@ -30,7 +30,7 @@ repoServer:
         name: argocd-cmp-cm
   initContainers:
     - name: download-avp
-      image: alpine:3.23
+      image: alpine:3.24
       command:
         - sh
         - "-c"
@@ -43,7 +43,7 @@ repoServer:
     - name: avp
       command:
         - /var/run/argocd/argocd-cmp-server
-      image: quay.io/argoproj/argocd:v3.4.2
+      image: quay.io/argoproj/argocd:v3.4.3
       securityContext:
         runAsNonRoot: true
         runAsUser: 999
