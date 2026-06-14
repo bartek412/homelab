@@ -48,7 +48,7 @@ postgresql:
   image:
     registry: docker.io
     repository: bitnami/postgresql
-    tag: latest
+    tag: 16.4.0
   primary:
     persistence:
       storageClass: proxmox
@@ -59,7 +59,7 @@ redis:
   image:
     registry: docker.io
     repository: bitnami/redis
-    tag: latest
+    tag: 7.4.0
   master:
     persistence:
       storageClass: proxmox
