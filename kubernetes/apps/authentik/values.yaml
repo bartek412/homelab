@@ -48,7 +48,7 @@ postgresql:
   image:
     registry: docker.io
     repository: library/postgres
-    tag: 16.14-bookworm
+    tag: 18.4-bookworm
   primary:
     persistence:
       storageClass: proxmox
