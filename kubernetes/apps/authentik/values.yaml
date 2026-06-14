@@ -47,8 +47,8 @@ postgresql:
       userPasswordKey: postgres-password
   image:
     registry: docker.io
-    repository: bitnami/postgresql
-    tag: 16.4.0
+    repository: library/postgres
+    tag: 16.6-bookworm
   primary:
     persistence:
       storageClass: proxmox
