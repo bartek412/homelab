@@ -1,0 +1,29 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: karakeep-tls
+  namespace: karakeep
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  secretName: karakeep-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - bookmarks.local.<domain>
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: karakeep-external-tls
+  namespace: karakeep
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  secretName: karakeep-external-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - bookmarks.<domain>

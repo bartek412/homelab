@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karakeep
+  namespace: karakeep
+  labels:
+    app: karakeep
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: karakeep
+  template:
+    metadata:
+      labels:
+        app: karakeep
+    spec:
+      containers:
+        - name: karakeep
+          image: ghcr.io/karakeep-app/karakeep:0.24.1
+          ports:
+            - name: web
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: karakeep-secrets
+                  key: nextauth-secret
+            - name: MEILI_ADDR
+              value: "http://localhost:7700"
+            - name: MEILI_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: karakeep-secrets
+                  key: meili-master-key
+            - name: BROWSER_WEB_URL
+              value: "http://localhost:9222"
+            - name: DATA_DIR
+              value: "/data"
+            - name: DISABLE_SIGNUPS
+              value: "true"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+
+        - name: meilisearch
+          image: getmeili/meilisearch:v1.13.3
+          ports:
+            - name: meili
+              containerPort: 7700
+              protocol: TCP
+          env:
+            - name: MEILI_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: karakeep-secrets
+                  key: meili-master-key
+            - name: MEILI_NO_ANALYTICS
+              value: "true"
+          volumeMounts:
+            - name: meilisearch-data
+              mountPath: /meili_data
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+
+        - name: chrome
+          image: gcr.io/zenika-hub/alpine-chrome:124
+          ports:
+            - name: chrome
+              containerPort: 9222
+              protocol: TCP
+          command:
+            - "chromium-browser"
+          args:
+            - "--headless"
+            - "--no-sandbox"
+            - "--disable-gpu"
+            - "--disable-dev-shm-usage"
+            - "--remote-debugging-address=0.0.0.0"
+            - "--remote-debugging-port=9222"
+            - "--hide-scrollbars"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: karakeep-data
+        - name: meilisearch-data
+          persistentVolumeClaim:
+            claimName: karakeep-meilisearch-data

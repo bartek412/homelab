@@ -1,0 +1,38 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: linkwarden
+  namespace: linkwarden
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`links.local.<domain>`)
+      kind: Rule
+      services:
+        - name: linkwarden
+          port: 80
+  tls:
+    secretName: linkwarden-tls
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: linkwarden-external
+  namespace: linkwarden
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`links.<domain>`)
+      kind: Rule
+      services:
+        - name: linkwarden
+          port: 80
+  tls:
+    secretName: linkwarden-external-tls

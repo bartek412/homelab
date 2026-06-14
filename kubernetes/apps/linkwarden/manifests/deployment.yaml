@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: linkwarden
+  namespace: linkwarden
+  labels:
+    app: linkwarden
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: linkwarden
+  template:
+    metadata:
+      labels:
+        app: linkwarden
+    spec:
+      containers:
+        - name: linkwarden
+          image: ghcr.io/linkwarden/linkwarden:v2.10.2
+          ports:
+            - name: web
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: linkwarden-secrets
+                  key: nextauth-secret
+            - name: NEXTAUTH_URL
+              valueFrom:
+                secretKeyRef:
+                  name: linkwarden-secrets
+                  key: nextauth-url
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: linkwarden-secrets
+                  key: database-url
+            - name: NEXT_PUBLIC_DISABLE_REGISTRATION
+              value: "true"
+            - name: STORAGE_FOLDER
+              value: "/data/data"
+          volumeMounts:
+            - name: data
+              mountPath: /data/data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: linkwarden-data

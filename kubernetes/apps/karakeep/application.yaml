@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karakeep
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  ignoreDifferences:
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jsonPointers:
+        - /status
+
+  sources:
+    - repoURL: https://github.com/bartek412/homelab.git
+      targetRevision: main
+      path: kubernetes/apps/karakeep/manifests
+      plugin:
+        name: avp
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: karakeep
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
