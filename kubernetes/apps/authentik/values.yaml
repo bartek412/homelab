@@ -1,12 +1,16 @@
 # Authentik Helm Values
 # Documentation: https://docs.goauthentik.io/
 # Secrets are pulled from Vault via External Secrets Operator
+# PostgreSQL provided by CloudNativePG operator
 
 authentik:
   secret_key: ""  # Loaded from authentik-secrets via AUTHENTIK_SECRET_KEY env
   error_reporting:
     enabled: false
   postgresql:
+    host: authentik-postgres-rw
+    name: authentik
+    user: authentik
     password: ""  # Loaded via AUTHENTIK_POSTGRESQL__PASSWORD env
 
 server:
@@ -22,8 +26,8 @@ server:
     - name: AUTHENTIK_POSTGRESQL__PASSWORD
       valueFrom:
         secretKeyRef:
-          name: authentik-secrets
-          key: postgres-password
+          name: authentik-postgres-credentials
+          key: password
 
 worker:
   replicas: 1
@@ -36,23 +40,11 @@ worker:
     - name: AUTHENTIK_POSTGRESQL__PASSWORD
       valueFrom:
         secretKeyRef:
-          name: authentik-secrets
-          key: postgres-password
+          name: authentik-postgres-credentials
+          key: password
 
 postgresql:
-  enabled: true
-  auth:
-    existingSecret: authentik-secrets
-    secretKeys:
-      userPasswordKey: postgres-password
-  image:
-    registry: docker.io
-    repository: library/postgres
-    tag: 18.4-bookworm
-  primary:
-    persistence:
-      storageClass: proxmox
-      size: 8Gi
+  enabled: false
 
 redis:
   enabled: true

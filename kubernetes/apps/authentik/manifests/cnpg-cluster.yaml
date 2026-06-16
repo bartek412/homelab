@@ -1,17 +1,17 @@
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: linkwarden-postgres
-  namespace: linkwarden
+  name: authentik-postgres
+  namespace: authentik
 spec:
   instances: 1
   storage:
-    size: 5Gi
+    size: 8Gi
     storageClass: proxmox
   bootstrap:
     initdb:
-      database: linkwarden
-      owner: linkwarden
+      database: authentik
+      owner: authentik
       secret:
-        name: linkwarden-postgres-credentials
+        name: authentik-postgres-credentials
   enableSuperuserAccess: false
