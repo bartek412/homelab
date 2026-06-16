@@ -16,7 +16,7 @@ spec:
       full: true
       numSockets: 1
       numCores: 2
-      memoryMiB: 2048
+      memoryMiB: 4096
       disks:
         bootVolume:
           disk: scsi0
