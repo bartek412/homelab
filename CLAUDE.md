@@ -55,6 +55,7 @@ traefik/                          # Internal (10.9.0.230) + External (10.9.0.231
 cert-manager/                     # TLS certs via Let's Encrypt + Cloudflare DNS-01
 external-secrets/                 # Vault → K8s Secret sync
 nfs-csi/                          # NFS storage driver
+cloudnative-pg/                   # PostgreSQL operator (CNPG) for app databases
 argocd/                           # Self-managed ArgoCD with Vault Plugin (AVP)
 ```
 
