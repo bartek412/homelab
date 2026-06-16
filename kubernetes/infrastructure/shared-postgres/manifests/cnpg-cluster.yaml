@@ -1,0 +1,27 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: shared-postgres
+  namespace: database
+spec:
+  instances: 1
+  storage:
+    size: 10Gi
+    storageClass: proxmox
+  bootstrap:
+    initdb:
+      database: authentik
+      owner: authentik
+      secret:
+        name: authentik-db-credentials
+      postInitSQL:
+        - CREATE ROLE linkwarden LOGIN
+        - CREATE DATABASE linkwarden OWNER linkwarden
+  managed:
+    roles:
+      - name: linkwarden
+        ensure: present
+        login: true
+        passwordSecret:
+          name: linkwarden-db-credentials
+  enableSuperuserAccess: false

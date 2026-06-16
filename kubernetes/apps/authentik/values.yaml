@@ -8,7 +8,7 @@ authentik:
   error_reporting:
     enabled: false
   postgresql:
-    host: authentik-postgres-rw
+    host: shared-postgres-rw.database.svc.cluster.local
     name: authentik
     user: authentik
     password: ""  # Loaded via AUTHENTIK_POSTGRESQL__PASSWORD env
