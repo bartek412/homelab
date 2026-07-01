@@ -14,7 +14,7 @@ spec:
     # Helm chart
     - repoURL: https://cloudnative-pg.github.io/charts
       chart: cloudnative-pg
-      targetRevision: 0.28.3
+      targetRevision: 0.29.0
       helm:
         valueFiles:
           - $values/kubernetes/infrastructure/cloudnative-pg/values.yaml
