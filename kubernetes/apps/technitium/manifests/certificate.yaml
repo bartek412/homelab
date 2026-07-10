@@ -11,4 +11,4 @@ spec:
     name: letsencrypt-production
     kind: ClusterIssuer
   dnsNames:
-    - dns.local.<domain>
+    - dns.<domain>

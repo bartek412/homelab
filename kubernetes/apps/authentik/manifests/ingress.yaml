@@ -9,7 +9,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`authentik.local.<domain>`)
+    - match: Host(`authentik.<domain>`)
       kind: Rule
       services:
         - name: authentik-server
@@ -29,7 +29,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`authentik.<domain>`)
+    - match: Host(`authentik.<domainprod>`)
       kind: Rule
       services:
         - name: authentik-server

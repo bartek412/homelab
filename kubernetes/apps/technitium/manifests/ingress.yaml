@@ -9,7 +9,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`dns.local.<domain>`)
+    - match: Host(`dns.<domain>`)
       kind: Rule
       services:
         - name: technitium-web

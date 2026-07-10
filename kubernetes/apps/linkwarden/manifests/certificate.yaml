@@ -11,7 +11,7 @@ spec:
     name: letsencrypt-production
     kind: ClusterIssuer
   dnsNames:
-    - links.local.<domain>
+    - links.<domain>
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -26,4 +26,4 @@ spec:
     name: letsencrypt-production
     kind: ClusterIssuer
   dnsNames:
-    - links.<domain>
+    - links.<domainprod>

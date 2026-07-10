@@ -9,7 +9,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`bookmarks.local.<domain>`)
+    - match: Host(`bookmarks.<domain>`)
       kind: Rule
       services:
         - name: karakeep
@@ -29,7 +29,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`bookmarks.<domain>`)
+    - match: Host(`bookmarks.<domainprod>`)
       kind: Rule
       services:
         - name: karakeep

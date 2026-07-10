@@ -9,7 +9,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`links.local.<domain>`)
+    - match: Host(`links.<domain>`)
       kind: Rule
       services:
         - name: linkwarden
@@ -29,7 +29,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`links.<domain>`)
+    - match: Host(`links.<domainprod>`)
       kind: Rule
       services:
         - name: linkwarden

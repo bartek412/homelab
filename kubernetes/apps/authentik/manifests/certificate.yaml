@@ -11,7 +11,7 @@ spec:
     name: letsencrypt-production
     kind: ClusterIssuer
   dnsNames:
-    - authentik.local.<domain>
+    - authentik.<domain>
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -26,4 +26,4 @@ spec:
     name: letsencrypt-production
     kind: ClusterIssuer
   dnsNames:
-    - authentik.<domain>
+    - authentik.<domainprod>
