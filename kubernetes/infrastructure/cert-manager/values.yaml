@@ -1,2 +1,6 @@
 crds:
   enabled: true
+
+extraArgs:
+  - --dns01-recursive-nameservers-only
+  - --dns01-recursive-nameservers=10.96.0.10:53
