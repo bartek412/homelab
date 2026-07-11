@@ -8,6 +8,7 @@ metadata:
     metallb.universe.tf/allow-shared-ip: "technitium"
 spec:
   type: LoadBalancer
+  externalTrafficPolicy: Local
   selector:
     app: technitium
   ports:
