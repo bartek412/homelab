@@ -21,8 +21,11 @@ ports:
     exposedPort: 80
     expose:
       default: true
-    redirectTo:
-      port: websecure
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
   websecure:
     port: 8443
     exposedPort: 443
