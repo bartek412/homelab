@@ -18,7 +18,7 @@ spec:
     # Helm chart
     - repoURL: https://charts.goauthentik.io
       chart: authentik
-      targetRevision: 2026.5.5
+      targetRevision: 2026.5.6
       helm:
         valueFiles:
           - $values/kubernetes/apps/authentik/values.yaml
