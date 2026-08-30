@@ -1,0 +1,17 @@
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: linkwarden-data-backup
+  namespace: linkwarden
+spec:
+  sourcePVC: linkwarden-data
+  trigger:
+    schedule: "0 3 * * *"
+  restic:
+    repository: linkwarden-data-volsync-secret
+    copyMethod: Direct
+    pruneIntervalDays: 7
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3

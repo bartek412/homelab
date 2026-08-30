@@ -1,0 +1,35 @@
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: karakeep-data-backup
+  namespace: karakeep
+spec:
+  sourcePVC: karakeep-data
+  trigger:
+    schedule: "0 3 * * *"
+  restic:
+    repository: karakeep-data-volsync-secret
+    copyMethod: Direct
+    pruneIntervalDays: 7
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: karakeep-meilisearch-data-backup
+  namespace: karakeep
+spec:
+  sourcePVC: karakeep-meilisearch-data
+  trigger:
+    schedule: "0 3 * * *"
+  restic:
+    repository: karakeep-meili-volsync-secret
+    copyMethod: Direct
+    pruneIntervalDays: 7
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3

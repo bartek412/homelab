@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: volsync
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  sources:
+    # Helm chart
+    - repoURL: https://backube.github.io/helm-charts/
+      chart: volsync
+      targetRevision: 0.16.0
+      helm:
+        valueFiles:
+          - $values/kubernetes/infrastructure/volsync/values.yaml
+
+    # Values from Git
+    - repoURL: https://github.com/bartek412/homelab.git
+      targetRevision: main
+      ref: values
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: volsync-system
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

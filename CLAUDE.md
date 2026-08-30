@@ -56,6 +56,7 @@ cert-manager/                     # TLS certs via Let's Encrypt + Cloudflare DNS
 external-secrets/                 # Vault → K8s Secret sync
 nfs-csi/                          # NFS storage driver
 cloudnative-pg/                   # PostgreSQL operator (CNPG) for app databases
+volsync/                          # Asynchronous PVC backup operator (Restic → SeaweedFS)
 argocd/                           # Self-managed ArgoCD with Vault Plugin (AVP)
 ```
 

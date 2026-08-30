@@ -1,0 +1,21 @@
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: technitium-config-backup
+  namespace: technitium
+spec:
+  sourcePVC: technitium-config
+  trigger:
+    schedule: "0 3 * * *"
+  restic:
+    repository: technitium-config-volsync-secret
+    copyMethod: Direct
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      runAsNonRoot: false
+    pruneIntervalDays: 7
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3
