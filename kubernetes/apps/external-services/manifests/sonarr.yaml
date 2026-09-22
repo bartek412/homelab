@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarr
+  namespace: external-services
+spec:
+  type: ExternalName
+  externalName: 10.9.0.50
+  ports:
+    - name: http
+      port: 8989
+      targetPort: 8989
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sonarr-tls
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  secretName: sonarr-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - sonarr.<domain>
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: sonarr
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`sonarr.<domain>`)
+      kind: Rule
+      services:
+        - name: sonarr
+          port: 8989
+  tls:
+    secretName: sonarr-tls

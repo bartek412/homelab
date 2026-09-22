@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wrt-lodz
+  namespace: external-services
+spec:
+  type: ExternalName
+  externalName: 10.23.0.1
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wrt-lodz-tls
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  secretName: wrt-lodz-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - wrt-lodz.<domain>
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: wrt-lodz
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`wrt-lodz.<domain>`)
+      kind: Rule
+      services:
+        - name: wrt-lodz
+          port: 80
+  tls:
+    secretName: wrt-lodz-tls

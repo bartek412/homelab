@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pbs
+  namespace: external-services
+spec:
+  type: ExternalName
+  externalName: 10.9.0.19
+  ports:
+    - name: https
+      port: 8007
+      targetPort: 8007
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pbs-tls
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  secretName: pbs-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - pbs.<domain>
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: pbs
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`pbs.<domain>`)
+      kind: Rule
+      services:
+        - name: pbs
+          port: 8007
+          scheme: https
+  tls:
+    secretName: pbs-tls

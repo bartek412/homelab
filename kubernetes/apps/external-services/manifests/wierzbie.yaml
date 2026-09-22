@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wierzbie
+  namespace: external-services
+spec:
+  type: ExternalName
+  externalName: 10.9.0.68
+  ports:
+    - name: https
+      port: 8006
+      targetPort: 8006
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wierzbie-tls
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  secretName: wierzbie-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - wierzbie.<domain>
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: wierzbie
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`wierzbie.<domain>`)
+      kind: Rule
+      services:
+        - name: wierzbie
+          port: 8006
+          scheme: https
+  tls:
+    secretName: wierzbie-tls

@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: firefox
+  namespace: external-services
+spec:
+  type: ExternalName
+  externalName: 10.9.0.50
+  ports:
+    - name: https
+      port: 3001
+      targetPort: 3001
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: firefox-tls
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  secretName: firefox-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - firefox.<domain>
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: firefox
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`firefox.<domain>`)
+      kind: Rule
+      services:
+        - name: firefox
+          port: 3001
+          scheme: https
+  tls:
+    secretName: firefox-tls

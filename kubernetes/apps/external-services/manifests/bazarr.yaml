@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bazarr
+  namespace: external-services
+spec:
+  type: ExternalName
+  externalName: 10.9.0.50
+  ports:
+    - name: http
+      port: 6767
+      targetPort: 6767
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: bazarr-tls
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  secretName: bazarr-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - bazarr.<domain>
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: bazarr
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`bazarr.<domain>`)
+      kind: Rule
+      services:
+        - name: bazarr
+          port: 6767
+  tls:
+    secretName: bazarr-tls

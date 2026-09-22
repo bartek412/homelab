@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wrt-wierzbie
+  namespace: external-services
+spec:
+  type: ExternalName
+  externalName: 10.9.0.1
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wrt-wierzbie-tls
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  secretName: wrt-wierzbie-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - wrt-wierzbie.<domain>
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: wrt-wierzbie
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`wrt-wierzbie.<domain>`)
+      kind: Rule
+      services:
+        - name: wrt-wierzbie
+          port: 80
+  tls:
+    secretName: wrt-wierzbie-tls

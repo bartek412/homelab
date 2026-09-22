@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: home-assistant
+  namespace: external-services
+spec:
+  type: ExternalName
+  externalName: 10.23.0.200
+  ports:
+    - name: http
+      port: 8123
+      targetPort: 8123
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: home-assistant-tls
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  secretName: home-assistant-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - home-assistant.<domain>
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: home-assistant
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`home-assistant.<domain>`)
+      kind: Rule
+      services:
+        - name: home-assistant
+          port: 8123
+  tls:
+    secretName: home-assistant-tls

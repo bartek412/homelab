@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: media
+  namespace: external-services
+spec:
+  type: ExternalName
+  externalName: 10.9.0.50
+  ports:
+    - name: http
+      port: 8096
+      targetPort: 8096
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: media-tls
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  secretName: media-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - media.<domain>
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: media
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`media.<domain>`)
+      kind: Rule
+      services:
+        - name: media
+          port: 8096
+  tls:
+    secretName: media-tls

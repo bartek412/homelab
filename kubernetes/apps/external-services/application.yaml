@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kvm
+  name: external-services
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -11,13 +11,13 @@ spec:
   sources:
     - repoURL: https://github.com/bartek412/homelab.git
       targetRevision: main
-      path: kubernetes/apps/kvm/manifests
+      path: kubernetes/apps/external-services/manifests
       plugin:
         name: avp
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: kvm
+    namespace: external-services
 
   syncPolicy:
     automated:

@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: radarr
+  namespace: external-services
+spec:
+  type: ExternalName
+  externalName: 10.9.0.50
+  ports:
+    - name: http
+      port: 7878
+      targetPort: 7878
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: radarr-tls
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  secretName: radarr-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - radarr.<domain>
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: radarr
+  namespace: external-services
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`radarr.<domain>`)
+      kind: Rule
+      services:
+        - name: radarr
+          port: 7878
+  tls:
+    secretName: radarr-tls
