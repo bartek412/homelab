@@ -38,7 +38,7 @@ spec:
                   name: karakeep-secrets
                   key: meili-master-key
             - name: BROWSER_WEB_URL
-              value: "http://localhost:9222"
+              value: "http://127.0.0.1:9222"
             - name: DATA_DIR
               value: "/data"
             - name: DISABLE_SIGNUPS
