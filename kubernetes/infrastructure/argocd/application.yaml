@@ -14,7 +14,7 @@ spec:
     # Helm chart
     - repoURL: https://argoproj.github.io/argo-helm
       chart: argo-cd
-      targetRevision: "*"
+      targetRevision: "10.9.2"
       helm:
         valueFiles:
           - $values/kubernetes/infrastructure/argocd/values.yaml
