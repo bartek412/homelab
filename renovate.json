@@ -4,22 +4,57 @@
     "config:recommended"
   ],
   "argocd": {
-    "managerFilePatterns": [
-      "/kubernetes/.+/application\\.yaml$/"
+    "fileMatch": [
+      "(^|/)kubernetes/.+/application\\.yaml$"
     ]
   },
+  "kubernetes": {
+    "fileMatch": [
+      "(^|/)kubernetes/.+\\.ya?ml$"
+    ]
+  },
+  "helm-values": {
+    "fileMatch": [
+      "(^|/)values.*\\.ya?ml$"
+    ]
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track argocd-vault-plugin binary version in ArgoCD values",
+      "fileMatch": [
+        "(^|/)kubernetes/infrastructure/argocd/values\\.yaml$"
+      ],
+      "matchStrings": [
+        "https://github\\.com/(?<depName>argoproj-labs/argocd-vault-plugin)/releases/download/v(?<currentValue>[^/]+)/"
+      ],
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v?(?<version>.*)$"
+    }
+  ],
   "packageRules": [
     {
       "description": "Group all infrastructure updates",
-      "matchFileNames": ["kubernetes/infrastructure/**"],
+      "matchFileNames": [
+        "kubernetes/infrastructure/**"
+      ],
       "groupName": "infrastructure",
       "automerge": false
     },
     {
       "description": "Group all app updates",
-      "matchFileNames": ["kubernetes/apps/**"],
+      "matchFileNames": [
+        "kubernetes/apps/**"
+      ],
       "groupName": "apps",
       "automerge": false
+    },
+    {
+      "description": "Pin wildcard/range Helm charts in ArgoCD applications",
+      "matchManagers": [
+        "argocd"
+      ],
+      "rangeStrategy": "pin"
     }
   ]
 }
