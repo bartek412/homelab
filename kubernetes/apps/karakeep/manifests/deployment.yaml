@@ -43,6 +43,26 @@ spec:
               value: "/data"
             - name: DISABLE_SIGNUPS
               value: "true"
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: karakeep-secrets
+                  key: gemini-key
+            - name: OPENAI_BASE_URL
+              value: "https://generativelanguage.googleapis.com/v1beta/openai/"
+            - name: INFERENCE_TEXT_MODEL
+              value: "gemini-3.8-flash"
+            - name: INFERENCE_IMAGE_MODEL
+              value: "gemini-3.8-flash"
+            - name: INFERENCE_OUTPUT_SCHEMA
+              value: "json"
+            - name: INFERENCE_ENABLE_AUTO_TAGGING
+              value: "true"
+            - name: INFERENCE_ENABLE_AUTO_SUMMARIZATION
+              value: "true"
+            - name: CHAT_ENABLED
+              value: "true"
+
           volumeMounts:
             - name: data
               mountPath: /data
