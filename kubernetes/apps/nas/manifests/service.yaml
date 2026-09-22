@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nas
+  namespace: nas
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: nas
+  namespace: nas
+subsets:
+  - addresses:
+      - ip: 10.9.0.50
+    ports:
+      - name: http
+        port: 80

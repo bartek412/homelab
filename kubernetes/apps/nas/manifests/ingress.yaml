@@ -1,0 +1,18 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nas
+  namespace: nas
+  annotations:
+    avp.kubernetes.io/path: "secret/data/kubernetes/config"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`nas.<domain>`)
+      kind: Rule
+      services:
+        - name: nas
+          port: 80
+  tls:
+    secretName: nas-tls
