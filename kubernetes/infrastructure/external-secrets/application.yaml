@@ -14,7 +14,7 @@ spec:
     # Helm chart
     - repoURL: https://charts.external-secrets.io
       chart: external-secrets
-      targetRevision: "*"
+      targetRevision: "2.11.0"
       helm:
         valueFiles:
           - $values/kubernetes/infrastructure/external-secrets/values.yaml

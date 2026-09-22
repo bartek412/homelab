@@ -13,7 +13,7 @@ spec:
   sources:
     - repoURL: https://traefik.github.io/charts
       chart: traefik
-      targetRevision: "*"
+      targetRevision: "41.6.0"
       helm:
         valueFiles:
           - $values/kubernetes/infrastructure/traefik/values-internal.yaml
@@ -48,7 +48,7 @@ spec:
   sources:
     - repoURL: https://traefik.github.io/charts
       chart: traefik
-      targetRevision: "*"
+      targetRevision: "41.6.0"
       helm:
         valueFiles:
           - $values/kubernetes/infrastructure/traefik/values-external.yaml

@@ -35,7 +35,7 @@ repoServer:
         - sh
         - "-c"
       args:
-        - "wget -O /custom-tools/argocd-vault-plugin https://github.com/argoproj-labs/argocd-vault-plugin/releases/download/v1.17.0/argocd-vault-plugin_1.17.0_linux_amd64 && chmod +x /custom-tools/argocd-vault-plugin"
+        - "wget -O /custom-tools/argocd-vault-plugin https://github.com/argoproj-labs/argocd-vault-plugin/releases/download/v1.18.1/argocd-vault-plugin_1.17.0_linux_amd64 && chmod +x /custom-tools/argocd-vault-plugin"
       volumeMounts:
         - name: custom-tools
           mountPath: /custom-tools
