@@ -78,7 +78,7 @@ spec:
               memory: 512Mi
 
         - name: chrome
-          image: gcr.io/zenika-hub/alpine-chrome:124
+          image: zenika/alpine-chrome:124
           ports:
             - name: chrome
               containerPort: 9222

@@ -11,9 +11,9 @@ spec:
   project: default
 
   sources:
-    - repoURL: ghcr.io/sergelogvinov
+    - repoURL: ghcr.io/sergelogvinov/charts
       chart: proxmox-cloud-controller-manager
-      targetRevision: "*"
+      targetRevision: 0.2.30
       helm:
         valueFiles:
           - $values/kubernetes/infrastructure/proxmox-ccm-csi/values-ccm.yaml
@@ -44,9 +44,9 @@ spec:
   project: default
 
   sources:
-    - repoURL: ghcr.io/sergelogvinov
+    - repoURL: ghcr.io/sergelogvinov/charts
       chart: proxmox-csi-plugin
-      targetRevision: "*"
+      targetRevision: 0.5.12
       helm:
         valueFiles:
           - $values/kubernetes/infrastructure/proxmox-ccm-csi/values-csi.yaml
