@@ -70,15 +70,18 @@ spec:
               value: "true"
 
 
+            - name: NODE_OPTIONS
+              value: "--max-old-space-size=1536"
+
           volumeMounts:
             - name: data
               mountPath: /data
           resources:
             requests:
               cpu: 100m
-              memory: 256Mi
-            limits:
               memory: 512Mi
+            limits:
+              memory: 2Gi
 
         - name: meilisearch
           image: getmeili/meilisearch:v1.54.0
@@ -102,9 +105,9 @@ spec:
           resources:
             requests:
               cpu: 50m
-              memory: 128Mi
+              memory: 256Mi
             limits:
-              memory: 512Mi
+              memory: 1Gi
 
         - name: chrome
           image: zenika/alpine-chrome:124
@@ -125,9 +128,9 @@ spec:
           resources:
             requests:
               cpu: 50m
-              memory: 128Mi
+              memory: 256Mi
             limits:
-              memory: 512Mi
+              memory: 1Gi
 
       volumes:
         - name: data
