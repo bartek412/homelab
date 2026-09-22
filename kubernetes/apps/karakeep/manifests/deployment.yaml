@@ -62,6 +62,13 @@ spec:
               value: "true"
             - name: CHAT_ENABLED
               value: "true"
+            - name: EMBEDDING_TEXT_MODEL
+              value: "gemini-embedding-2"
+            - name: EMBEDDING_DIMENSIONS
+              value: "3072"
+            - name: EMBEDDING_ENABLE_AUTO_INDEXING
+              value: "true"
+
 
           volumeMounts:
             - name: data
