@@ -4,26 +4,26 @@
     "config:recommended"
   ],
   "argocd": {
-    "fileMatch": [
-      "(^|/)kubernetes/.+/application\\.yaml$"
+    "managerFilePatterns": [
+      "/(^|/)kubernetes/.+/application\\.yaml$/"
     ]
   },
   "kubernetes": {
-    "fileMatch": [
-      "(^|/)kubernetes/.+\\.ya?ml$"
+    "managerFilePatterns": [
+      "/(^|/)kubernetes/.+\\.ya?ml$/"
     ]
   },
   "helm-values": {
-    "fileMatch": [
-      "(^|/)values.*\\.ya?ml$"
+    "managerFilePatterns": [
+      "/(^|/)values.*\\.ya?ml$/"
     ]
   },
   "customManagers": [
     {
       "customType": "regex",
       "description": "Track argocd-vault-plugin binary version in ArgoCD values",
-      "fileMatch": [
-        "(^|/)kubernetes/infrastructure/argocd/values\\.yaml$"
+      "managerFilePatterns": [
+        "/(^|/)kubernetes/infrastructure/argocd/values\\.yaml$/"
       ],
       "matchStrings": [
         "https://github\\.com/(?<depName>argoproj-labs/argocd-vault-plugin)/releases/download/v(?<currentValue>[^/]+)/"
