@@ -13,7 +13,7 @@ spec:
   sources:
     - repoURL: ghcr.io/sergelogvinov/charts
       chart: proxmox-cloud-controller-manager
-      targetRevision: 0.2.30
+      targetRevision: 0.2.32
       helm:
         valueFiles:
           - $values/kubernetes/infrastructure/proxmox-ccm-csi/values-ccm.yaml
