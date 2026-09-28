@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: technitium
-          image: technitium/dns-server:15.5.0
+          image: technitium/dns-server:15.5.1
           ports:
             - name: dns-tcp
               containerPort: 53
