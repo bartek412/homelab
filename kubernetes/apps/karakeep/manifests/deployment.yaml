@@ -84,7 +84,7 @@ spec:
               memory: 2Gi
 
         - name: meilisearch
-          image: getmeili/meilisearch:v1.54.0
+          image: getmeili/meilisearch:v1.54.3
           ports:
             - name: meili
               containerPort: 7700
