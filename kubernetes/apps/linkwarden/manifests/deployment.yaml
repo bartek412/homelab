@@ -44,6 +44,18 @@ spec:
               value: "true"
             - name: STORAGE_FOLDER
               value: "/data/data"
+            # AI tagging via Gemini (OpenAI-compatible endpoint)
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: linkwarden-secrets
+                  key: gemini-key
+            - name: CUSTOM_OPENAI_BASE_URL
+              value: "https://generativelanguage.googleapis.com/v1beta/openai/"
+            - name: CUSTOM_OPENAI_NAME
+              value: "gemini"
+            - name: OPENAI_MODEL
+              value: "gemini-3.8-flash"
           volumeMounts:
             - name: data
               mountPath: /data/data
