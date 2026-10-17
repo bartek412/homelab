@@ -15,6 +15,9 @@ spec:
       chart: proxmox-cloud-controller-manager
       targetRevision: 0.2.32
       helm:
+        # Must match the Helm release name used by bootstrap.sh so that resource
+        # names (and the expected credentials secret) are consistent.
+        releaseName: proxmox-cloud-controller-manager
         valueFiles:
           - $values/kubernetes/infrastructure/proxmox-ccm-csi/values-ccm.yaml
 
@@ -48,6 +51,9 @@ spec:
       chart: proxmox-csi-plugin
       targetRevision: 0.5.13
       helm:
+        # Must match the Helm release name used by bootstrap.sh so that resource
+        # names (and the expected credentials secret) are consistent.
+        releaseName: proxmox-csi-plugin
         valueFiles:
           - $values/kubernetes/infrastructure/proxmox-ccm-csi/values-csi.yaml
 

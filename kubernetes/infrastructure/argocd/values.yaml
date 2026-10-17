@@ -31,11 +31,17 @@ repoServer:
   initContainers:
     - name: download-avp
       image: alpine:3.24
+      env:
+        # Single source of truth for the AVP version (used in both the release
+        # tag and the asset filename). Bumped by Renovate via the marker below.
+        # renovate: datasource=github-releases depName=argoproj-labs/argocd-vault-plugin
+        - name: AVP_VERSION
+          value: "1.18.1"
       command:
         - sh
         - "-c"
       args:
-        - "wget -O /custom-tools/argocd-vault-plugin https://github.com/argoproj-labs/argocd-vault-plugin/releases/download/v1.18.1/argocd-vault-plugin_1.17.0_linux_amd64 && chmod +x /custom-tools/argocd-vault-plugin"
+        - "set -e; wget -O /custom-tools/argocd-vault-plugin \"https://github.com/argoproj-labs/argocd-vault-plugin/releases/download/v${AVP_VERSION}/argocd-vault-plugin_${AVP_VERSION}_linux_amd64\" && chmod +x /custom-tools/argocd-vault-plugin"
       volumeMounts:
         - name: custom-tools
           mountPath: /custom-tools

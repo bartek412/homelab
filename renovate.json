@@ -21,14 +21,13 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Track argocd-vault-plugin binary version in ArgoCD values",
+      "description": "Track argocd-vault-plugin binary version (AVP_VERSION env) in ArgoCD values",
       "managerFilePatterns": [
         "/(^|/)kubernetes/infrastructure/argocd/values\\.yaml$/"
       ],
       "matchStrings": [
-        "https://github\\.com/(?<depName>argoproj-labs/argocd-vault-plugin)/releases/download/v(?<currentValue>[^/]+)/"
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\s*\\n\\s*-\\s*name:\\s*\\S+\\s*\\n\\s*value:\\s*\"?(?<currentValue>[^\"\\s]+)\"?"
       ],
-      "datasourceTemplate": "github-releases",
       "extractVersionTemplate": "^v?(?<version>.*)$"
     }
   ],
